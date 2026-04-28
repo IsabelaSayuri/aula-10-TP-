@@ -1,0 +1,52 @@
+# Controle o número de acessos a um serviço
+# bloquear após 3 tentativas
+
+from abc import ABC, abstractmethod
+# from import -> importa as partes específicas de um módulo
+# abc -> modulo padrão do python
+# ABC -> classe para classes abstratas
+# abstract method -> função usada como decorator
+
+# Interface comum
+class Servico(ABC):
+    # serviço herda de ABC
+    @abstractmethod
+    def operacao(self):
+        pass
+
+# Objeto real
+class ServicoReal(Servico):
+    def operacao(self):
+        return "Operação realizada com sucesso!"
+        
+        # def -> define a função/método
+        # self -> referência ao próprio objeto
+        # pass -> reserva espaço, não faz nada
+
+# Proxy único para Segurança e Bloqueio
+class ProxySeguranca(Servico):
+    tentativas_falhas = 0  # Atributo de classe para contar erros
+
+    def __init__(self, senha_correta):
+        self.senha_correta = senha_correta
+        self.servico_real = ServicoReal()
+
+    def operacao(self, senha_digitada):
+        if ProxySeguranca.tentativas_falhas >= 3:
+            return "Acesso Bloqueado! Limite de 3 tentativas."
+        
+        if senha_digitada == self.senha_correta:
+            ProxySeguranca.tentativas_falhas = 0 # Reseta ao acertar
+            return self.servico_real.operacao()
+        else:
+            ProxySeguranca.tentativas_falhas += 1
+            return f"Acesso negado! Tentativa {ProxySeguranca.tentativas_falhas} de 3."
+
+# Uso
+proxy = ProxySeguranca("123")
+
+# Simulação
+print(proxy.operacao("000")) # Erro 1
+print(proxy.operacao("000")) # Erro 2
+print(proxy.operacao("000")) # Erro 3 -> Bloqueia
+print(proxy.operacao("123")) # Tentativa mesmo com a senha certa após bloqueio
